@@ -3,6 +3,7 @@
 # author: Archie Benn sj19031@bristol.ac.uk 
 
 import numpy as np
+import time
 import pyvista as pv
 from pathlib import Path
 from wise_pears.ray_occlusion_cpp import visible_pairs
@@ -23,8 +24,13 @@ large_200_nest = np.load(data_dir / "nest_large.npy")
 
 def visibility_visualiser(vol):
 
-    # outputs from visible_pairs is Nx3 array of open voxel coords and Mx2 array of visibile pair indices  
+    t0_build = time.perf_counter()
+
+    # run main C++ Amanatides & Woo algorithm for ray tracing all open voxel pairs  
+    t0_cpp = time.perf_counter()
     coords, edges = visible_pairs(vol)
+    t_cpp = time.perf_counter() - t0_cpp
+
     n = len(coords)
 
     # count visible connections per voxel (each edge contributes to both endpoints)
@@ -50,9 +56,14 @@ def visibility_visualiser(vol):
     p.add_mesh(voxel_mesh, 
             scalars="visibility_score",
                 cmap="seismic", 
-                opacity=0.4,
+                opacity=0.5,
                 show_edges=False)
-    
+
+    t_build = time.perf_counter() - t0_build
+    print(f"visible_pairs (C++): {t_cpp:.3f}s")
+    print(f"total before render: {t_build:.3f}s")
+
     p.show()
+
 
 visibility_visualiser(medium_100_nest)
