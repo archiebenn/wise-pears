@@ -10,8 +10,8 @@ find_package(pybind11 REQUIRED)
 
 # TODO: make this test.cpp Amanatides and Woo occlusion algorithm 
 # TODO 2: update woo_test.cpp with real algorithm 
-# this created the _occlusion_cpp module from woo_test.cpp
-pybind11_add_module(_occlusion_cpp tests/woo_test.cpp)
+# this created the occlusion_cpp module from woo_test.cpp
+pybind11_add_module(ray_occlusion_cpp tests/amanatides-woo_test.cpp)
 
 # once compiled so an .so, add to the wise_pears package folder  
-install(TARGETS _occlusion_cpp DESTINATION wise_pears)
+install(TARGETS ray_occlusion_cpp DESTINATION wise_pears)

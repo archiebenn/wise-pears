@@ -25,6 +25,9 @@ def tunnel_excavater(size = 100, n_steps = 20000, branch_prob = 0.02, radius = 1
 
     def excavate(position):
         """
+        Takes current position and excavates by the radius provided (radius = 1 -> 3x3 excavation)  
+        
+        Sets thosecells to 1 i.e. excavated  
         """
 
         # get current coordinates of 'position'
