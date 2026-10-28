@@ -15,6 +15,7 @@ Date started: 26-10-2026
 ## 28-10-26  
 
 - Generated `intricate_volumes.py` which uses `random` module and a set of defined rules to excavate out random volumes from a set full volume size
+- The idea is to generate some intricate test volumes which are similar to ant nests for the development of the visibility graph  
 - E.g here is an excavated volume, visualised in `pyvista`, from:
   ```
   c = tunnel_excavater(size=200, seed=3, n_steps=200000, branch_prob=0.0001, radius=1)
