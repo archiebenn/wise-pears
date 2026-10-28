@@ -32,6 +32,7 @@ def visibility_visualiser(vol):
     t_cpp = time.perf_counter() - t0_cpp
 
     n = len(coords)
+    n_rays = n * (n - 1) // 2
 
     # count visible connections per voxel (each edge contributes to both endpoints)
     counts = np.bincount(edges[:, 0], minlength=n) + np.bincount(edges[:, 1], minlength=n)
@@ -55,15 +56,18 @@ def visibility_visualiser(vol):
 
     p.add_mesh(voxel_mesh, 
             scalars="visibility_score",
-                cmap="seismic", 
+                cmap="turbo", 
                 opacity=0.5,
                 show_edges=False)
 
     t_build = time.perf_counter() - t0_build
-    print(f"visible_pairs (C++): {t_cpp:.3f}s")
+
+    print(f"open voxels: {n}, rays: {n_rays:,}, visible pairs: {len(edges):,}")
+    print(f"time in C++ 'hot loop': {t_cpp:.5f}s")
+    print(f"average time per ray: {t_cpp / n_rays * 1e6:.5f} µs")
     print(f"total before render: {t_build:.3f}s")
 
     p.show()
 
 
-visibility_visualiser(medium_100_nest)
+visibility_visualiser(small_15_nest)

@@ -1,0 +1,59 @@
+# benchmarks.py - benchmarking C++ timings on algorithm over time with development  
+# author: Archie Benn sj19031@bristol.ac.uk 
+# date: 28-10-26  
+
+import csv, datetime, subprocess
+import numpy as np
+import time
+from pathlib import Path
+from wise_pears.ray_occlusion_cpp import visible_pairs
+
+benchmark_dir = Path(__file__).resolve().parent
+csv_path = benchmark_dir / "benchmarks.csv"
+
+# load benchmark artifical nest volumes
+small_15_nest = np.load(benchmark_dir / "nest_small_bm.npy")
+medium_100_nest = np.load(benchmark_dir / "nest_bm.npy")
+large_200_nest = np.load(benchmark_dir / "nest_large_bm.npy")
+
+# get current commit for tracking over time
+commit = subprocess.run(["git", "rev-parse", "--short", "HEAD"],
+                        capture_output=True, text=True).stdout.strip()
+
+# benchmark timer
+def benchmark(name, vol, repeats=3):
+    times = []
+    for _ in range(repeats):
+        t0 = time.perf_counter()
+        # run C++ hot loop
+        coords, edges = visible_pairs(vol)
+        times.append(time.perf_counter() - t0)
+    t_cpp = min(times)
+
+    n = len(coords)
+    n_rays = n * (n - 1) // 2
+    row = {
+        "timestamp": datetime.datetime.now().isoformat(timespec="seconds"),
+        "git_commit": commit,
+        "volume_name": name,
+        "volume_shape": "x".join(map(str, vol.shape)),
+        "open_voxels": n,
+        "n_rays": n_rays,
+        "visible_pairs": len(edges),
+        "t_cpp_s": round(t_cpp, 6),
+        "us_per_ray": round(t_cpp / n_rays * 1e6, 5),
+    }
+    print(row)
+
+    new = not csv_path.exists()
+    with csv_path.open("a", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=row.keys())
+        if new:
+            w.writeheader()
+        w.writerow(row)
+
+
+# run benchmarks
+benchmark("small_15", small_15_nest, repeats=3)
+benchmark("medium_100", medium_100_nest, repeats=3)
+# benchmark("large_200", large_200_nest, repeats=1)
