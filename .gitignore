@@ -1,0 +1,4 @@
+uv-cheatsheet.md
+.venv
+/build
+*.npy

@@ -1,0 +1,15 @@
+[build-system]
+requires = ["scikit-build-core", "pybind11"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "wise_pears"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = ["numpy", "scipy", "pyvista"]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[tool.scikit-build]
+wheel.packages = ["python/wise_pears"]
