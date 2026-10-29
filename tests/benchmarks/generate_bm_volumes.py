@@ -8,6 +8,7 @@ import random
 
 # tests/data directory
 benchmark_dir = Path(__file__).resolve().parent
+benchmark_dir.mkdir(exist_ok=True)
 
 def tunnel_excavater(size = 100, n_steps = 20000, branch_prob = 0.02, radius = 1, seed=0):
     """
