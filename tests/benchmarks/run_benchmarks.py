@@ -19,7 +19,7 @@ computer_name = input()
 small_20_nest = np.load(benchmark_dir / "nest_small_bm.npy")
 small_medium_45_nest = np.load(benchmark_dir / "nest_medium_bm.npy")
 medium_100_nest = np.load(benchmark_dir / "nest_bm.npy")
-large_200_nest = np.load(benchmark_dir / "nest_large_bm.npy")
+large_150_nest = np.load(benchmark_dir / "nest_large_bm.npy")
 
 # get current commit for tracking over time
 commit = subprocess.run(["git", "rev-parse", "--short", "HEAD"],
@@ -67,6 +67,6 @@ def benchmark(name, vol, repeats=3, computer = computer_name):
 benchmark("small_20", small_20_nest, repeats=3)
 benchmark("small_medium_45", small_medium_45_nest, repeats=1)
 benchmark("medium_100", medium_100_nest, repeats=3)
-# benchmark("large_200", large_200_nest, repeats=1)
+#benchmark("large_150", large_150_nest, repeats=1)
 
 print("***BENCHMARK COMPLETE***")

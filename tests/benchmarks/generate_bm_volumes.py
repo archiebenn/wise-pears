@@ -80,8 +80,8 @@ a = tunnel_excavater(seed=10, n_steps=30000, branch_prob=0.0001, radius=1)
 # small 15^3 variant (smaller radius for narrower tunnels)
 b = tunnel_excavater(size=20, seed=6, n_steps=1000, branch_prob=0.0001, radius=0)
 
-# large 200^3 variant
-c = tunnel_excavater(size=200, seed=4, n_steps=250000, branch_prob=0.0001, radius=1)
+# large 150^3 variant
+c = tunnel_excavater(size=150, seed=4, n_steps=250000, branch_prob=0.0001, radius=1)
 
 # 22^3 variant
 d = tunnel_excavater(size=45, seed=4, n_steps=12000, branch_prob=0.0001, radius=0)

@@ -14,7 +14,7 @@ data_dir = Path(__file__).resolve().parent / "volumes"
 # load in generated example nest volume .npys
 small_20_nest = np.load(data_dir / "nest_small.npy")
 medium_100_nest = np.load(data_dir / "nest.npy")
-large_200_nest = np.load(data_dir / "nest_large.npy")
+large_150_nest = np.load(data_dir / "nest_large.npy")
 
 
 def visibility_visualiser(vol):
@@ -76,4 +76,4 @@ def visibility_visualiser(vol):
     p.show()
 
 
-visibility_visualiser(medium_100_nest)
+visibility_visualiser(large_150_nest)

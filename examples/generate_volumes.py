@@ -80,8 +80,8 @@ a = tunnel_excavater(seed=91, n_steps=40000, branch_prob=0.00001, radius=1)
 # small 20^2 variant (smaller radius for narrower tunnels)
 b = tunnel_excavater(size=20, seed=8, n_steps=500, branch_prob=0.0001, radius=0)
 
-# large 200^3 variant
-c = tunnel_excavater(size=200, seed=3, n_steps=200000, branch_prob=0.0001, radius=1)
+# large 150^3 variant
+c = tunnel_excavater(size=150, seed=3, n_steps=120000, branch_prob=0.0001, radius=1)
 
 # saving out the .npy volumes
 np.save(data_dir / "nest.npy", a)
