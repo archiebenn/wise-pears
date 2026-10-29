@@ -1,4 +1,4 @@
-# pyvista_output.py - colouring voxels on pyvista by their visibility from pairwise occlusion calculations  
+# pyvista_example.py - view pyvista example outputs coloured buy voxel visibility scores 
 # date: 28-10-2026
 # author: Archie Benn sj19031@bristol.ac.uk 
 
@@ -9,20 +9,22 @@ from pathlib import Path
 from wise_pears.ray_occlusion_cpp import visible_pairs
 
 # get data directory  
-data_dir = Path(__file__).resolve().parent / "data"
+data_dir = Path(__file__).resolve().parent / "volumes"
 
-# small test volumes 
-vol = np.ones((5, 5, 5), dtype=np.uint8)
-vol2 = vol.copy(); vol2[0:2, 0:2, 0:2] = 0 
-
-# load in nest volume .npys
-# 15^3 test
-small_15_nest = np.load(data_dir / "nest_small.npy")
+# load in generated example nest volume .npys
+small_20_nest = np.load(data_dir / "nest_small.npy")
 medium_100_nest = np.load(data_dir / "nest.npy")
 large_200_nest = np.load(data_dir / "nest_large.npy")
 
 
 def visibility_visualiser(vol):
+    """
+    Takes a volume in .npy format with binary voxel values of 0 or 1 (0 = solid, 1 = open).  
+
+    Runs the visible_pairs function (written in C++ for efficiency) and computes visibility scores for every open voxel in the volume.
+
+    Visibility scores of open voxels are then visualised in 3D on the volume using pyvista.
+    """
 
     t0_build = time.perf_counter()
 
@@ -43,17 +45,21 @@ def visibility_visualiser(vol):
     # create 3D grid with dimensions defined by .npy volume size (+ 1 cell in each dimension for pyvista)
     grid = pv.ImageData(dimensions=np.array(vol.shape) + 1)
 
+    # flatten cells for pyvista, and attach 0/1 voxel values to the volume grid  
     grid.cell_data["open"] = vol.flatten(order="F")
+
+    # start with every cell in volume as NaN 
     score_volume = np.full(vol.shape, np.nan, dtype=float)
+
+    # access summed open voxel visibility scores from np.bincount on the visible_pairs() output and apply to the cells in volume
     score_volume[tuple(coords.T)] = scores
     grid.cell_data["visibility_score"] = score_volume.flatten(order="F")
 
-    # transparent outline of the full volume bounds (cheap wireframe, gives spatial context)
+    # transparent outline of the full volume bounds for spatial context  
     p.add_mesh(grid.outline(), color="black", line_width=1)
 
     # render each open voxel as a cell colored by its visibility score
     voxel_mesh = grid.threshold(0.5, scalars="open")
-
     p.add_mesh(voxel_mesh, 
             scalars="visibility_score",
                 cmap="turbo", 
@@ -62,10 +68,10 @@ def visibility_visualiser(vol):
 
     t_build = time.perf_counter() - t0_build
 
-    print(f"open voxels: {n}, rays: {n_rays:,}, visible pairs: {len(edges):,}")
-    print(f"time in C++ 'hot loop': {t_cpp:.5f}s")
-    print(f"average time per ray: {t_cpp / n_rays * 1e6:.5f} µs")
-    print(f"total before render: {t_build:.3f}s")
+    print(f"Open voxels: {n}, rays cast: {n_rays:,}, visible pairs: {len(edges):,}")
+    print(f"Time in C++ 'hot loop': {t_cpp:.5f}s")
+    print(f"Average time per ray: {t_cpp / n_rays * 1e6:.5f} µs")
+    print(f"Total time before render: {t_build:.3f}s")
 
     p.show()
 

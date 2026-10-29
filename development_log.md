@@ -80,3 +80,5 @@ Python: 18.12656s  (82x slower)
 ```
 
 - so can see how much extra time this would add for large volumes, and this is still single thread on C++  
+- went over some pytests with Claude too as good to have for development  
+- realised my C++ algorithm treats a ray passing exactly through a diagonal where one corner is solid treats the ray line as visible, which is not that strict -> could leave it as-is as not a very large issue but need to explicitly mention corner-grazing behaviour  

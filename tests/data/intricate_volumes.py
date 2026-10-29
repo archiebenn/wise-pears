@@ -36,7 +36,7 @@ def tunnel_excavater(size = 100, n_steps = 20000, branch_prob = 0.02, radius = 1
         low = [max(0, x-radius), max(0, y-radius), max(0, z-radius)]
         high = [min(size, x + radius + 1), min(size, y + radius + 1), min(size, z + radius + 1)]
 
-        # ****actual excavation step i.e. set carved volume == 1**** 
+        # ****actual excavation step i.e. set carved voxel(s) == 1**** 
         vol[low[0]:high[0], low[1]:high[1], low[2]:high[2]] = 1
 
     # begin 'excavation' with starting position in centre of volume
@@ -74,7 +74,7 @@ def tunnel_excavater(size = 100, n_steps = 20000, branch_prob = 0.02, radius = 1
 
 # tunnel network, all connected (single random-walk origin, branches only spawn from carved voxels)
 # 100^3 default size version. ant-nest like optimised
-a = tunnel_excavater(seed=3, n_steps=30000, branch_prob=0.0001, radius=1)
+a = tunnel_excavater(seed=91, n_steps=40000, branch_prob=0.00001, radius=1)
 
 # small 15^2 variant (smaller radius for narrower tunnels)
 b = tunnel_excavater(size=15, seed=8, n_steps=500, branch_prob=0.0001, radius=0)

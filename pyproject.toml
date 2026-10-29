@@ -5,11 +5,25 @@ build-backend = "scikit_build_core.build"
 [project]
 name = "wise_pears"
 version = "0.1.0"
+description = "All-pairs visibility analyses on voxel volumes (Amanatides & Woo, C++)"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Archie Benn" }]
 requires-python = ">=3.10"
 dependencies = ["numpy", "scipy", "pyvista"]
 
-[project.optional-dependencies]
-dev = ["pytest"]
+[project.urls]
+Repository = "https://github.com/archiebenn/wise-pears"
 
 [tool.scikit-build]
 wheel.packages = ["python/wise_pears"]
+sdist.exclude = ["tests", "development_log.md", "uv-cheatsheet.md"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+]
