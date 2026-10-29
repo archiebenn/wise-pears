@@ -76,18 +76,25 @@ def tunnel_excavater(size = 100, n_steps = 20000, branch_prob = 0.02, radius = 1
 # 100^3 default size version. ant-nest like optimised
 a = tunnel_excavater(seed=10, n_steps=30000, branch_prob=0.0001, radius=1)
 
-# small 15^2 variant (smaller radius for narrower tunnels)
+# small 15^3 variant (smaller radius for narrower tunnels)
 b = tunnel_excavater(size=20, seed=6, n_steps=1000, branch_prob=0.0001, radius=0)
 
 # large 200^3 variant
 c = tunnel_excavater(size=200, seed=4, n_steps=250000, branch_prob=0.0001, radius=1)
 
+# 22^3 variant
+d = tunnel_excavater(size=45, seed=4, n_steps=12000, branch_prob=0.0001, radius=0)
+
+
 # saving out the .npy volumes
 np.save(benchmark_dir / "nest_bm.npy", a)
 np.save(benchmark_dir / "nest_small_bm.npy", b)
 np.save(benchmark_dir / "nest_large_bm.npy", c)
+np.save(benchmark_dir / "nest_medium_bm.npy", d)
+
 
 # some infor printed out about % of excavated volume  
-print(f"nest.npy: {a.sum()} open voxels of {a.size} ({100*a.sum()/a.size:.2f}%)")
-print(f"nest_small.npy: {b.sum()} open voxels of {b.size} ({100*b.sum()/b.size:.2f}%)")
-print(f"nest_large.npy: {c.sum()} open voxels of {c.size} ({100*c.sum()/c.size:.2f}%)")
+print(f"nest_bm.npy: {a.sum()} open voxels of {a.size} ({100*a.sum()/a.size:.2f}%)")
+print(f"nest_small_bm.npy: {b.sum()} open voxels of {b.size} ({100*b.sum()/b.size:.2f}%)")
+print(f"nest_large_bm.npy: {c.sum()} open voxels of {c.size} ({100*c.sum()/c.size:.2f}%)")
+print(f"nest_medium_bm.npy: {d.sum()} open voxels of {d.size} ({100*d.sum()/d.size:.2f}%)")

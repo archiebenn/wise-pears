@@ -8,8 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # require pybind  
 find_package(pybind11 REQUIRED)
 
-# TODO: make this test.cpp Amanatides and Woo occlusion algorithm 
-# TODO 2: update woo_test.cpp with real algorithm 
+# TODO : update woo_test.cpp with real algorithm 
 # this created the occlusion_cpp module from woo_test.cpp
 pybind11_add_module(ray_occlusion_cpp tests/amanatides-woo_test.cpp)
 

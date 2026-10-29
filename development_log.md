@@ -34,24 +34,45 @@ Date started: 26-10-2026
 
 ## Main issues  
 
-- Scaling issue: as this is currently set to be pairwise, comparisons between voxels will scale as O(n^2)  
-- For large scans of nests at high resolution, this will massively increase compute expense   
-- Therefore need to implement in a tight loop in C++ and optimise using known solutions (to-do)  
-- Already going to use the Amanitides and Woo algorithm, but could think of some pair-wise solutions too  
+- scaling issue: as this is currently set to be pairwise, comparisons between voxels will scale as O(n_open_voxels^2)  
+- for large scans of nests at high resolution, this will massively increase compute expense   
+- therefore need to implement in a tight loop in C++ and optimise using known solutions (to-do)  
+- already going to use the Amanitides & Woo algorithm, but could think of some pair-wise solutions too  
 
 ### 26-10-2026  
 
-- Started development of `wise-pears`
-- Set up python project development and learned about how to create these pip-installable tools
-- Tested out using `pyvista` with some generated simple 3D binary volumes with 'solid voxel == 0' and 'open voxel == 1'  
+- started development of `wise-pears`
+- set up python project development and learned about how to create these pip-installable tools
+- tested out using `pyvista` with some generated simple 3D binary volumes with 'solid voxel == 0' and 'open voxel == 1'  
 
 ### 28-10-26  
 
-- Generated `intricate_volumes.py` which uses `random` module and a set of defined rules to excavate out random volumes from a set full volume size
-- The idea is to generate some intricate test volumes which are similar to ant nests for the development of the visibility graph  
-- E.g here is an excavated volume, visualised in `pyvista`, from:
+- generated `intricate_volumes.py` which uses `random` module and a set of defined rules to excavate out random volumes from a set full volume size
+- the idea is to generate some intricate test volumes which are similar to ant nests for the development of the visibility graph  
+- e.g here is an excavated volume, visualised in `pyvista`, from:
   ```
   c = tunnel_excavater(size=200, seed=3, n_steps=200000, branch_prob=0.0001, radius=1)
   ```
   
 ![alt text](https://github.com/archiebenn/wise-pears/blob/main/tests/data/images/test_200cubed.png "Test 200^3 excavated volume")
+
+- got the is_visible function for a single pair visibility using Amanatides & Woo algorithm in `woo_test.cpp` working  
+- then developed the main visible_pairs function which loops over every set of open voxel pairs (in one direction only) and tests with is_visible, returning a Nx3 array of open voxel coords and a Mx2 array of visible pair indices for that Nx3 array  
+- this will allow both the visualisation with `pyvista` and the development ot `networkx` visibility graphs to be worked on, as the coordinates of each voxel and the visibility to each other open voxel from that one is saved  
+- started on a test run for colouring `pyvista` outputs by a visibility score  
+- also did some benchmarking timings and got upt to around 70s for the 100^3 volume  
+- the current C++ script can definitely be optimised further, e.g multithreading  
+
+### 29-10-26  
+
+- got claude to translate my C++ script line for line into Python, just to test benchmarking  
+- (this is for the visible pairs calculation)  
+- here is an example of the speed-up from implementing in C++ on a 45^3 volume:  
+
+```
+open voxels: 7416  edges: 125340
+C++:    0.22159s
+Python: 18.12656s  (82x slower)
+```
+
+- so can see how much extra time this would add for large volumes, and this is still single thread on C++  

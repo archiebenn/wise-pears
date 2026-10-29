@@ -28,6 +28,7 @@ uint8_t get_voxel_value(pybind11::array_t<uint8_t> volume, int x, int y, int z){
     return accessor(x,y,z);
 }
 
+// 2 structs: 3 integer and 3 double
 struct Vec3i {int x, y, z;};
 struct Vec3d {double x, y, z;};
 
@@ -104,10 +105,11 @@ bool is_visible(pybind11::array_t<uint8_t> volume, int x0, int y0, int z0, int x
 
         // with the current pos ('or current ray end') location, access the byte value in the volume/.npy array:
         // if the voxel the ray is currently ending at == 0, the ray has hit a solid structure and return false
+        // this is **early exit**  
         if (accessor(pos.x,pos.y,pos.z) == 0) return false;
     }
 
-    // ray has been traced from start to finish, so return true (line of sight is visible)
+    // ray has been traced from start voxel to finish voxel, so return true (line of sight is visible between pair)  
     return true;
 
 }
