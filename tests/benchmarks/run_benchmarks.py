@@ -23,7 +23,12 @@ commit = subprocess.run(["git", "rev-parse", "--short", "HEAD"],
 
 # benchmark timer
 def benchmark(name, vol, repeats=3):
+
+    print("What computer is running this benchmark?")
+    computer = input()
+
     times = []
+
     for _ in range(repeats):
         t0 = time.perf_counter()
         # run C++ hot loop
@@ -35,6 +40,7 @@ def benchmark(name, vol, repeats=3):
     n_rays = n * (n - 1) // 2
     row = {
         "timestamp": datetime.datetime.now().isoformat(timespec="seconds"),
+        "computer": computer,
         "git_commit": commit,
         "volume_name": name,
         "volume_shape": "x".join(map(str, vol.shape)),
