@@ -6,8 +6,9 @@ import numpy as np
 from pathlib import Path
 import random
 
-# volume directory
+# .npy volume directory 
 data_dir = Path(__file__).resolve().parent / "volumes"
+data_dir.mkdir(exist_ok=True)
 
 def tunnel_excavater(size = 100, n_steps = 20000, branch_prob = 0.02, radius = 1, seed=0):
     """
