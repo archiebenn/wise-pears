@@ -26,6 +26,7 @@ def benchmark(name, vol, repeats=3):
 
     print("What computer is running this benchmark?")
     computer = input()
+    print("***BENCHMARK RUNNING***")
 
     times = []
 
