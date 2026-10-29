@@ -7,6 +7,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 #include <cmath>
+#include <algorithm>
 
 /**
  * Return voxel value (0 or 1) from numpy array (3D volume)
@@ -157,33 +158,56 @@ visible_pairs(pybind11::array_t<uint8_t> volume){
     std::vector<std::pair<int,int>> edges;
 
     // ****HOT LOOP START****
+    // updated for multithreading to reduce times (Claude helped here a lot)
     // outer loop walks every voxel i=0 to i=n-1 in open_voxels
-    // this is the main and slow loop which walks through every voxel pair (i,j) and tests occlusion using if_visible 
-    for (size_t i = 0; i < n; ++i) 
+    // this is the main and slow loop which walks through every voxel pair (i, j) and tests occlusion using is_visible
     {
+        // release the GIL - so python isn't blocked while this runs
+        // for multithreading
+        pybind11::gil_scoped_release release;
 
-        // point at voxel i's coordinates stores in open_voxels and store as a
-        const Vec3i& a = open_voxels[i];
-
-        // inner loop: symmetry optimisation -> never check the same pair from the opposite direction
-        // hence the 'j = i +1' - if i = 0, j runs 1,2,3... and if i = 1 j runs 2,3,4...  
-        // this stops testing A<->B and then also B<->A as result will be identical  
-        for (size_t j = i + 1; j < n; ++j) 
+        // start a team of threads and each runs this block
+        #pragma omp parallel
         {
-            // point at voxel i's coordinates stores in open_voxels and store as b
-            const Vec3i& b = open_voxels[j];
+            // per thread results: avoids a data race from many threads doing push_back into the shared 'edges' object  
+            std::vector<std::pair<int,int>> local;
 
-            // so now have 2 voxels and (i and j) with coords stored in a and b
-            // so can test visibility between them both
-            if (is_visible(accessor, a.x, a.y, a.z, b.x, b.y, b.z)) 
+            // split the outer loop across threads. dynamic = threads grab chunks of 16 rows as they finish,
+            // which balances the load since early i rows do far more work (j = i+1 shrinks as i grows)
+            // nowait = don't make threads wait for each other at the end of the loop
+            #pragma omp for schedule(dynamic, 16) nowait
+            for (long long i = 0; i < (long long)n; ++i)
             {
-                 // if visible, record this pair in edges
-                edges.emplace_back((int)i, (int)j);
+                // point at voxel i's coordinates stored in open_voxels and store as a
+                const Vec3i& a = open_voxels[i];
 
-             }
-         }
-    }
+                // inner loop: symmetry optimisation -> never check the same pair from the opposite direction
+                // hence the 'j = i +1' - if i = 0, j runs 1,2,3... and if i = 1 j runs 2,3,4...
+                // this stops testing A<->B and then also B<->A as result will be identical
+                for (size_t j = (size_t)i + 1; j < n; ++j)
+                {
+                    // point at voxel j's coordinates stored in open_voxels and store as b
+                    const Vec3i& b = open_voxels[j];
+
+                    // so now have 2 voxels (i and j) with coords stored in a and b
+                    // so can test visibility between them both with is_visible
+                    if (is_visible(accessor, a.x, a.y, a.z, b.x, b.y, b.z))
+                    {
+                        // if visible, record this pair in this thread's local list
+                        local.emplace_back((int)i, (int)j);
+                    }
+                }
+            }
+
+            // merge this thread's results into the shared edges, one thread at a time
+            #pragma omp critical
+            edges.insert(edges.end(), local.begin(), local.end());
+        }
+    }  
     // ****HOT LOOP END****
+
+    // threads finish in nondeterministic order, so sort to get the same output every run
+    std::sort(edges.begin(), edges.end());
 
     // pack open voxel coords into an N x 3 numpy array
     auto coords = pybind11::array_t<int>({(long)n, (long)3});
