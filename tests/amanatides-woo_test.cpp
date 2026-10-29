@@ -32,11 +32,16 @@ uint8_t get_voxel_value(pybind11::array_t<uint8_t> volume, int x, int y, int z){
 struct Vec3i {int x, y, z;};
 struct Vec3d {double x, y, z;};
 
+// type alias for the volume. unchecked_reference gives access to underlying array in Python so doesn't need to load it 
+// i.e. gives raw view to the numpy data   
+// making this alias and passing by reference in is_visible stops accessor being rebuilt on every is_visible loop
+using Vol = pybind11::detail::unchecked_reference<uint8_t, 3>;
+
 /**
  * Return if a **single** pair of voxels is visible to each other in a straight line without being occluded by a solid/0 voxel  
  * Using "Amanatides, J. & Woo, A. A Fast Voxel Traversal Algorithm for Ray Tracing." algorithm  
  *
- * @param volume numpy np.uint8 data type
+ * @param volume read-only view of the 3D uint8 numpy volume
  * @param x0 start voxel index along the x axis
  * @param y0 start voxel index along the y axis
  * @param z0 start voxel index along the z axis
@@ -45,13 +50,10 @@ struct Vec3d {double x, y, z;};
  * @param z1 end voxel index along the z axis
  * @return BOOL for whether visible in line or sight (true) or not (false)    
  */
-bool is_visible(pybind11::array_t<uint8_t> volume, int x0, int y0, int z0, int x1, int y1, int z1){
-
-    // .unchecked<3>() gives access to underlying array in Python so doesn't need to load it  
-    auto accessor = volume.unchecked<3>();
+bool is_visible(const Vol& volume, int x0, int y0, int z0, int x1, int y1, int z1){
 
     // only go forward if both start and end voxels == 1 i.e. open voxels  
-    if (accessor(x0,y0,z0) == 0 || accessor(x1,y1,z1) == 0) return false;
+    if (volume(x0,y0,z0) == 0 || volume(x1,y1,z1) == 0) return false;
 
     // current position (first voxel initially) and constant end voxel indices/coords
     Vec3i pos = {x0, y0, z0};
@@ -106,7 +108,7 @@ bool is_visible(pybind11::array_t<uint8_t> volume, int x0, int y0, int z0, int x
         // with the current pos ('or current ray end') location, access the byte value in the volume/.npy array:
         // if the voxel the ray is currently ending at == 0, the ray has hit a solid structure and return false
         // this is **early exit**  
-        if (accessor(pos.x,pos.y,pos.z) == 0) return false;
+        if (volume(pos.x,pos.y,pos.z) == 0) return false;
     }
 
     // ray has been traced from start voxel to finish voxel, so return true (line of sight is visible between pair)  
@@ -114,6 +116,10 @@ bool is_visible(pybind11::array_t<uint8_t> volume, int x0, int y0, int z0, int x
 
 }
 
+// for python import after changing the parameters for main is_visible
+bool is_visible_py(pybind11::array_t<uint8_t> volume, int x0, int y0, int z0, int x1, int y1, int z1){
+    return is_visible(volume.unchecked<3>(), x0, y0, z0, x1, y1, z1);
+}
 
 /**
  * Compute all visible pairs of free voxels in the volume.
@@ -127,6 +133,8 @@ std::pair<pybind11::array_t<int>, pybind11::array_t<int>>
 visible_pairs(pybind11::array_t<uint8_t> volume){
 
     // .unchecked<3>() gives access to underlying array in Python so doesn't need to load it 
+    // update to is_visible (29-10-26) means that this is the only time this is built now
+    // and then passed by reference (const Vol&) to is_visible
     auto accessor = volume.unchecked<3>();
 
     // this will hold the coordinates of every open voxel found in the volume
@@ -167,7 +175,7 @@ visible_pairs(pybind11::array_t<uint8_t> volume){
 
             // so now have 2 voxels and (i and j) with coords stored in a and b
             // so can test visibility between them both
-            if (is_visible(volume, a.x, a.y, a.z, b.x, b.y, b.z)) 
+            if (is_visible(accessor, a.x, a.y, a.z, b.x, b.y, b.z)) 
             {
                  // if visible, record this pair in edges
                 edges.emplace_back((int)i, (int)j);
@@ -203,7 +211,7 @@ visible_pairs(pybind11::array_t<uint8_t> volume){
 // pybind module - (occlusion_cpp must match name in CMakeLists.txt)  
 PYBIND11_MODULE(ray_occlusion_cpp, m) {
     m.def("get_voxel_value", &get_voxel_value, "Return voxel value (0 or 1) from numpy array (3D volume)");
-    m.def("is_visible", &is_visible, "Return if a **single** pair of voxels is visible to each other in a straight line without being occluded by a solid/0 voxel");
+    m.def("is_visible", &is_visible_py, "Return whether a single voxel pair has line of sight");
     m.def("visible_pairs", &visible_pairs, "Computes all visible voxel pairs in a volume and returns Nx3 int array of open voxel coordinates as well a linked Mx2 array of visible index pairs");
 }
 
