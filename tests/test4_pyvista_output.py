@@ -70,4 +70,4 @@ def visibility_visualiser(vol):
     p.show()
 
 
-visibility_visualiser(small_15_nest)
+visibility_visualiser(medium_100_nest)
