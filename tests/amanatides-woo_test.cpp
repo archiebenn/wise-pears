@@ -158,12 +158,12 @@ visible_pairs(pybind11::array_t<uint8_t> volume){
     std::vector<std::pair<int,int>> edges;
 
     // ****HOT LOOP START****
-    // updated for multithreading to reduce times (Claude helped here a lot)
+    // updated for multithreading to reduce times (Claude helped here)
     // outer loop walks every voxel i=0 to i=n-1 in open_voxels
     // this is the main and slow loop which walks through every voxel pair (i, j) and tests occlusion using is_visible
     {
-        // release the GIL - so python isn't blocked while this runs
-        // for multithreading
+        // release the 'GIL' - so python isn't blocked while this runs
+        // (for multithreading)
         pybind11::gil_scoped_release release;
 
         // start a team of threads and each runs this block
@@ -172,8 +172,8 @@ visible_pairs(pybind11::array_t<uint8_t> volume){
             // per thread results: avoids a data race from many threads doing push_back into the shared 'edges' object  
             std::vector<std::pair<int,int>> local;
 
-            // split the outer loop across threads. dynamic = threads grab chunks of 16 rows as they finish,
-            // which balances the load since early i rows do far more work (j = i+1 shrinks as i grows)
+            // split the outer loop across threads. dynamic, 16 = threads grab chunks of 16 rows as they finish
+            // which balances the load since early i rows do more work (j = i+1 shrinks as i grows)
             // nowait = don't make threads wait for each other at the end of the loop
             #pragma omp for schedule(dynamic, 16) nowait
             for (long long i = 0; i < (long long)n; ++i)
