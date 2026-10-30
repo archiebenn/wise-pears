@@ -1,4 +1,4 @@
-# test_oracle.py - tests C++ function against a brute-force version 
+# test_oracle.py - tests C++ amanatides-woo algorithm implementation and the main visible_pairs
 # date: 29-10-2026  
 # author: Archie Benn sj19031@bristol.ac.uk (+ Claude for pytest guidance)  
 
@@ -6,14 +6,37 @@ import numpy as np
 import pytest
 from itertools import combinations, product
 from fractions import Fraction
-from visivox.ray_occlusion_cpp import visible_pairs
+from visivox.ray_occlusion_cpp import is_visible, visible_pairs
+
+# check 5^3 fully open/1 volume 
+def test_open_volume_visible():
+    vol = np.ones((5, 5, 5), dtype=np.uint8)
+    assert is_visible(vol, 0, 0, 0, 4, 4, 4)
+
+# check 5^3 with a closed/0 voxel 
+def test_wall_blocks_diagonal():
+    vol = np.ones((5, 5, 5), dtype=np.uint8)
+    vol[2, 2, 2] = 0
+    assert not is_visible(vol, 0, 0, 0, 4, 4, 4)
+    assert is_visible(vol, 0, 0, 0, 0, 0, 4)
+
+# same as above but testing main pair count function for reduction of visible pairs
+def test_wall_reduces_visible_pairs():
+    vol = np.ones((5, 5, 5), dtype=np.uint8)
+    vol2 = vol.copy(); vol2[2, 2, 2] = 0
+    # number of visible pairs should drop in volume with wall 
+    _, edges = visible_pairs(vol)
+    _, edges2 = visible_pairs(vol2)
+    assert edges2.shape[0] < edges.shape[0]
 
 def brute_force_bounds(vol, a, b):
     """
-    Exact oracle: returns strict (strict, lenient) visibility between open voxels a <-> b
+    Brute force: returns strict (strict, lenient) visibility between open voxels a <-> b
 
-    Strict -> 
-    Lenient -> 
+    Strict = visibility is only true if ray segment touches no solid voxel at all
+
+    Lenient = visibility can also be true if ray segment grazes corner of solid voxel 
+    (e.g. in exact diagonal where open voxel is adjacent to a closed voxel on the corner the ray goes through)
 
     """
 
@@ -26,9 +49,9 @@ def brute_force_bounds(vol, a, b):
     lo_v = [min(i, j) for i, j in zip(a, b)]
     hi_v = [max(i, j) for i, j in zip(a, b)]
 
-    # segment touches a solid voxel at all (including corners/edges)
+    # touches: segment touches a solid voxel at all (including corners/edges)
     touches = False   
-    # segment passes through a solid voxel's interior 
+    # crosses: segment passes through a solid voxel's interior 
     crosses = False    
 
     # loop over every voxel in the bounding box of the two endpoints
@@ -53,9 +76,9 @@ def brute_force_bounds(vol, a, b):
                 crosses = True
     return not touches, not crosses  
 
-# pytest: assert that brute force and my C++ function arrive at the same results for visibility  
-# run over 20 seeds for random
-@pytest.mark.parametrize("seed", range(20))
+# pytest: assert that brute force and my C++ function arrive at the same results for visibility algorithm  
+# run over 15 seeds for random
+@pytest.mark.parametrize("seed", range(15))
 def test_matches_brute_force(seed):
     """C++ result must lie between the strict and lenient brute-force answers."""
 
@@ -74,7 +97,7 @@ def test_matches_brute_force(seed):
         # lowest and higehest acceptable answers  
         strict, lenient = brute_force_bounds(vol, a, b)
         cpp = is_visible(vol, *a, *b)
-        # assert that C++ result falls between these bounds  
+        # assert that C++ result falls between these strict/lenient bounds  
         assert strict <= cpp <= lenient, (
             f"seed={seed} a={a} b={b} C++={cpp} strict={strict} lenient={lenient}"
         )

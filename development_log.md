@@ -86,3 +86,10 @@ Python: 18.12656s  (82x slower)
 - added multithreading with help from Claude  
 - 10.5x speed up on 100^3 macbook which is great, but then tried to do 150^3 and had memory errors  
 - need to decide whether i want to fix that and allow bigger volumes or just have a hard limit on open voxel counts in volume  
+
+### 30-10-26  
+
+- changed from `pyvista` to `napari` and added as an optional install  
+- so users can do `uv pip install visivox[gui]` and that will then install my dependencies + `napari[all]`  
+- napari seems to be much better than pyvista, it renders full volumes and more interactive than `pyvista`  
+- had an idea to try and optimise the ray counts: if a ray A<->B is visible, and C,D,E are all traversed by that ray, is there a way to mark B,C,E as visible from A and B too? then don't need to individually check/cast C,D,E from A or B. should speed it up if i can get it implemented somehow, but maybe not  

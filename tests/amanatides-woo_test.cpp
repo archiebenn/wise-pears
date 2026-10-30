@@ -1,17 +1,21 @@
-// woo_test.cpp - small scale testing of ray-tracing  
-// based on an algorithm from "Amanatides, J. & Woo, A. A Fast Voxel Traversal Algorithm for Ray Tracing."  
-// general guide for implementation: https://m4xc.dev/articles/amanatides-and-woo/  
-// date: 26-10-2026  
-// author: Archie Benn sj19031@bristol.ac.uk  
+/* woo_test.cpp - small scale testing of ray-tracing  
+based on an algorithm from "Amanatides, J. & Woo, A. A Fast Voxel Traversal Algorithm for Ray Tracing."  
+guide for algorithm and implementation: https://m4xc.dev/articles/amanatides-and-woo/  
+date started: 26-10-2026  
+author: Archie Benn sj19031@bristol.ac.uk
+*/  
 
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
+#include <vector>
+#include <cstdint>
+#include <utility>
 #include <cmath>
 #include <algorithm>
 
 /**
  * Return voxel value (0 or 1) from numpy array (3D volume)
- * For initial testing of C++ <-> Python indexing  
+ * For testing C++ <-> Python indexing  
  *
  * @param volume numpy np.uint8 data type
  * @param x voxel index along the x axis
@@ -34,7 +38,7 @@ struct Vec3i {int x, y, z;};
 struct Vec3d {double x, y, z;};
 
 // type alias for the volume. unchecked_reference gives access to underlying array in Python so doesn't need to load it 
-// i.e. gives raw view to the numpy data   
+// i.e. gives raw view to the numpy array   
 // making this alias and passing by reference in is_visible stops accessor being rebuilt on every is_visible loop
 using Vol = pybind11::detail::unchecked_reference<uint8_t, 3>;
 
@@ -87,7 +91,7 @@ bool is_visible(const Vol& volume, int x0, int y0, int z0, int x1, int y1, int z
     // and now to implement the actual Amanatides-Woo algorithtm:
     while (pos.x != end.x || pos.y != end.y || pos.z != end.z){
 
-        // step on the acxis where tmax is the smallest (from website)  
+        // step on the axis where tmax is the smallest (from website guide)  
         if (tmax.x < tmax.y) {
             if (tmax.x < tmax.z) {
                 pos.x += step.x;
@@ -124,21 +128,19 @@ bool is_visible_py(pybind11::array_t<uint8_t> volume, int x0, int y0, int z0, in
 
 /**
  * Compute all visible pairs of free voxels in the volume.
- * One call from Python; returns the free voxel coordinates plus the
- * list of visible (i, j) index pairs into that list.
+ * One call from Python; returns the free voxel coordinates plus the list of visible (i, j) index pairs into that list.
  *
  * @param volume numpy np.uint8 data type
  * @return pair of: (N x 3 int array of free voxel coordinates, M x 2 int array of visible index pairs)
  */
-std::pair<pybind11::array_t<int>, pybind11::array_t<int>>
-visible_pairs(pybind11::array_t<uint8_t> volume){
+std::pair<pybind11::array_t<int>, pybind11::array_t<int>> visible_pairs(pybind11::array_t<uint8_t> volume){
 
-    // .unchecked<3>() gives access to underlying array in Python so doesn't need to load it 
-    // update to is_visible (29-10-26) means that this is the only time this is built now
+    // .unchecked<3>() gives fast volume(x,y,z) access to the numpy array
+    // update to is_visible (29-10-26) means that this is the only time accessor is built now
     // and then passed by reference (const Vol&) to is_visible
     auto accessor = volume.unchecked<3>();
 
-    // this will hold the coordinates of every open voxel found in the volume
+    // this will hold the x,y,z coordinates of every open voxel found in the volume
     std::vector<Vec3i> open_voxels;
 
     // loop over every voxel in the volume - accessor.shape<(0,1,2)> = size of volume in x,y,z axes  
@@ -158,11 +160,9 @@ visible_pairs(pybind11::array_t<uint8_t> volume){
     std::vector<std::pair<int,int>> edges;
 
     // ****HOT LOOP START****
-    // updated for multithreading to reduce times (Claude helped here)
     // outer loop walks every voxel i=0 to i=n-1 in open_voxels
-    // this is the main and slow loop which walks through every voxel pair (i, j) and tests occlusion using is_visible
+    // this is the main loop which walks through every voxel pair (i, j) and tests occlusion using is_visible
     {
-        // release the 'GIL' - so python isn't blocked while this runs
         // (for multithreading)
         pybind11::gil_scoped_release release;
 

@@ -6,6 +6,7 @@ import numpy as np
 import time
 import pyvista as pv
 from pathlib import Path
+import napari
 from visivox.ray_occlusion_cpp import visible_pairs
 
 # get data directory  
@@ -38,33 +39,29 @@ def visibility_visualiser(vol):
 
     # count visible connections per voxel (each edge contributes to both endpoints)
     counts = np.bincount(edges[:, 0], minlength=n) + np.bincount(edges[:, 1], minlength=n)
-    scores = counts  #/ (n - 1)  # normalises to 0-1 if un-hashed
+    scores = counts / (n - 1)  # normalises to 0-1 if un-hashed
 
     p = pv.Plotter()
 
     # create 3D grid with dimensions defined by .npy volume size (+ 1 cell in each dimension for pyvista)
-    grid = pv.ImageData(dimensions=np.array(vol.shape) + 1)
+    #grid = pv.ImageData(dimensions=np.array(vol.shape) + 1)
 
     # flatten cells for pyvista, and attach 0/1 voxel values to the volume grid  
-    grid.cell_data["open"] = vol.flatten(order="F")
+    #grid.cell_data["open"] = vol.flatten(order="F")
 
     # start with every cell in volume as NaN 
     score_volume = np.full(vol.shape, np.nan, dtype=float)
 
     # access summed open voxel visibility scores from np.bincount on the visible_pairs() output and apply to the cells in volume
     score_volume[tuple(coords.T)] = scores
-    grid.cell_data["visibility_score"] = score_volume.flatten(order="F")
+    #grid.cell_data["visibility_score"] = score_volume.flatten(order="F")
 
     # transparent outline of the full volume bounds for spatial context  
-    p.add_mesh(grid.outline(), color="black", line_width=1)
+    #p.add_mesh(grid.outline(), color="black", line_width=1)
 
     # render each open voxel as a cell colored by its visibility score
-    voxel_mesh = grid.threshold(0.5, scalars="open")
-    p.add_mesh(voxel_mesh, 
-            scalars="visibility_score",
-                cmap="turbo", 
-                opacity=0.5,
-                show_edges=False)
+    #voxel_mesh = grid.threshold(0.5, scalars="open")
+    #p.add_mesh(voxel_mesh, scalars="visibility_score", cmap="turbo", opacity=0.5,show_edges=False)
 
     t_build = time.perf_counter() - t0_build
 
@@ -73,7 +70,14 @@ def visibility_visualiser(vol):
     print(f"Average time per ray: {t_cpp / n_rays * 1e6:.5f} µs")
     print(f"Total time before render: {t_build:.3f}s")
 
-    p.show()
+    viewer = napari.Viewer(ndisplay=3)
+    viewer.add_image(score_volume, colormap="turbo", rendering="mip", opacity=0.8)
+    
+    # add binary mask for reference to overall shape (not coloured)
+    viewer.add_labels(vol.astype(int), opacity=0.3)
+    napari.run()
+    
+
 
 
 visibility_visualiser(medium_100_nest)
