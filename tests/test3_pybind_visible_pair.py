@@ -4,7 +4,7 @@
 
 import numpy as np
 from pathlib import Path
-from wise_pears.ray_occlusion_cpp import visible_pairs
+from visivox.ray_occlusion_cpp import visible_pairs
 
 # get data directory  
 data_dir = Path(__file__).resolve().parent / "data"

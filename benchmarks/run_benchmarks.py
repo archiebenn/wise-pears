@@ -7,7 +7,7 @@ import numpy as np
 import time
 import platform, os
 from pathlib import Path
-from wise_pears.ray_occlusion_cpp import visible_pairs
+from visivox.ray_occlusion_cpp import visible_pairs
 
 benchmark_dir = Path(__file__).resolve().parent
 csv_path = benchmark_dir / "benchmarks.csv"

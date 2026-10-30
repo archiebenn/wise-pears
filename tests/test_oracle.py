@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from itertools import combinations, product
 from fractions import Fraction
-from wise_pears.ray_occlusion_cpp import is_visible
+from visivox.ray_occlusion_cpp import visible_pairs
 
 def brute_force_bounds(vol, a, b):
     """

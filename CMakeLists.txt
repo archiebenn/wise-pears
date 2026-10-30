@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-project(wise_pears)
+project(visivox)
 
 # C++ 23
 set(CMAKE_CXX_STANDARD 23)
@@ -27,8 +27,8 @@ find_package(OpenMP)
 if(OpenMP_CXX_FOUND)
     target_link_libraries(ray_occlusion_cpp PRIVATE OpenMP::OpenMP_CXX)
 else()
-    message(WARNING "OpenMP not found: building serial (non-threaded) version. Expect slower times")
+    message(WARNING "OpenMP not found: building serial (non-threaded and slower) version. Please install!")
 endif()
 
 # once compiled so an .so, add to the wise_pears package folder  
-install(TARGETS ray_occlusion_cpp DESTINATION wise_pears)
+install(TARGETS ray_occlusion_cpp DESTINATION visivox)

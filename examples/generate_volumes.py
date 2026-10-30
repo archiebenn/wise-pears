@@ -75,7 +75,7 @@ def tunnel_excavater(size = 100, n_steps = 20000, branch_prob = 0.02, radius = 1
 # add new tunnels below, or adapt existing three 
 
 # 100^3 default size version. ant-nest like optimised
-a = tunnel_excavater(seed=91, n_steps=40000, branch_prob=0.00001, radius=1)
+a = tunnel_excavater(seed=91, n_steps=4000, branch_prob=0.00001, radius=1)
 
 # small 20^2 variant (smaller radius for narrower tunnels)
 b = tunnel_excavater(size=20, seed=8, n_steps=500, branch_prob=0.0001, radius=0)
